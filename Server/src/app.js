@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require("cors");
+const authRouter = require('./routes/authRouter');
 require("dotenv").config();
 
 const app = express();
@@ -9,8 +10,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
 
-app.get("/", (req, res) => {
-    res.json({"msg": "server working."});
-});
+// Router.
+app.use("/auth", authRouter);
 
 module.exports = app;

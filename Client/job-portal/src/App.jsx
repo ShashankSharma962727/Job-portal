@@ -1,3 +1,4 @@
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -5,23 +6,29 @@ import {
   CardHeader,
   CardTitle,
 } from "./components/ui/card";
+import Register from "./pages/Register";
+import { Home } from "lucide-react";
+import Login from "./pages/Login";
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Home/>
+  },
+  {
+    path: "/register",
+    element: <Register/>
+  },
+  {
+    path: "/login",
+    element: <Login/>
+  }
+])
 
 function App() {
   return (
     <>
-      <main className="w-full min-h-screen flex items-center justify-center">
-        <Card className="max-w-sm">
-        <CardHeader>
-          <CardTitle>Project Overview</CardTitle>
-          <CardDescription>
-            Track progress and recent activity for your Vite app.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          Your design system is ready. Start building your next component.
-        </CardContent>
-      </Card>
-      </main>
+    <RouterProvider router={router}/>
     </>
   );
 }
