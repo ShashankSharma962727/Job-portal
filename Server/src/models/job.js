@@ -7,11 +7,6 @@ const jobSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    description: {
-      type: String,
-      required: true,
-      trim: true,
-    },
     company: {
       type: String,
       required: true,
@@ -22,15 +17,20 @@ const jobSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    jobtype: {
+      type: String,
+      enum: ["Full-time", "Part-time", "Remote","Contract", "Internship"],
+      required: true
+    },
     salary: {
       type: Number,
       required: true,
       min: 0,
     },
-    jobType: {
-      type: String,
+    experience: {
+      type: Number,
       required: true,
-      enum: ["Full-time", "Part-time", "Internship", "Contract"],
+      min: 0,
     },
     skills: {
       type: [String],
@@ -40,10 +40,20 @@ const jobSchema = new mongoose.Schema(
         message: "At least one skill is required",
       },
     },
-    experience: {
-      type: Number,
+    description: {
+      type: String,
       required: true,
-      min: 0,
+      trim: true,
+    },
+    responsibilities: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    requirements: {
+      type: String,
+      required: true,
+      trim: true,
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,

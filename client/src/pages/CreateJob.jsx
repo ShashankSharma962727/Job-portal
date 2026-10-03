@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import { BsArrowLeft, BsPlusCircle } from "react-icons/bs";
 
 import JobForm from "../components/ui/Recruiter/JobForm";
-import JobPreview from "../components/ui/Recruiter/JobPreview";
 
 const CreateJob = () => {
   return (
@@ -41,14 +40,8 @@ const CreateJob = () => {
         </div>
 
         {/* Form and preview */}
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <JobForm />
-          </div>
-
-          <div className="lg:sticky lg:top-6">
-            <JobPreview />
-          </div>
+        <div>
+          <JobForm />
         </div>
       </div>
     </main>

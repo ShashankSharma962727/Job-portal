@@ -195,11 +195,12 @@ const generateNewToken = async (req, res) => {
   }
 };
 
-const profile = (req, res) => {
+const profile = async (req, res) => {
   try {
-    const user = req.user;
+    const userid = req.user.userid;
+    const userdata = await userModel.findById(userid).select("-password");
 
-    return res.status(200).json(user);
+    return res.status(200).json(userdata);
   } catch (error) {
     return res.status(500).json({ message: "Server Error" });
   }

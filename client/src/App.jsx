@@ -5,7 +5,6 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Jobs from "./pages/Jobs";
 import JobDetails from "./pages/Jobdetails";
-import CandidateDashboard from "./pages/CandidateDashboard";
 import MyApplications from "./pages/MyApplications";
 import CandidateProfile from "./pages/CandidateProfile";
 import RecruiterDashboard from "./pages/RecruiterDashBoard";
@@ -15,7 +14,10 @@ import Applicants from "./pages/Applicants";
 import EditJob from "./pages/EditJobs";
 import RecruiterProfile from "./pages/RecruiterProfile";
 import NotFound from "./pages/NotFound";
-
+import JobsLayout from "./pages/JobsLayout";
+import ProfileLayout from "./pages/ProfileLayout";
+import RecruiterLayout from "./pages/RecruiterLayout";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const router = createBrowserRouter([
   {
@@ -32,50 +34,74 @@ const router = createBrowserRouter([
   },
   {
     path: "/jobs",
-    element: <Jobs />,
+    element: <JobsLayout />,
+    children: [
+      {
+        index: true,
+        element: <Jobs />,
+      },
+      {
+        path: ":id",
+        element: <JobDetails />,
+      },
+    ],
   },
   {
-    path: "/job",
-    element: <JobDetails/>,
+    element: <ProtectedRoute allowedRole={["candidate"]} />,
+    children: [
+      {
+        path: "/profile",
+        element: <ProfileLayout />,
+        children: [
+          {
+            index: true,
+            element: <CandidateProfile />,
+          },
+          {
+            path: "my-applications",
+            element: <MyApplications />,
+          },
+        ],
+      },
+    ],
   },
   {
-    path: "/candiate",
-    element: <CandidateDashboard/>,
+    element: <ProtectedRoute allowedRole={["recruiter"]} />,
+    children: [
+      {
+        path: "/recruiter",
+        element: <RecruiterLayout />,
+        children: [
+          {
+            index: true,
+            element: <RecruiterDashboard />,
+          },
+          {
+            path: "profile",
+            element: <RecruiterProfile />,
+          },
+          {
+            path: "createjob",
+            element: <CreateJob />,
+          },
+          {
+            path: "managejob",
+            element: <ManageJobs />,
+          },
+          {
+            path: "applicants/:jobId",
+            element: <Applicants />,
+          },
+          {
+            path: "editjob/:id",
+            element: <EditJob />,
+          },
+        ],
+      },
+    ],
   },
   {
-    path: "/myapplication",
-    element: <MyApplications/>,
-  },
-  {
-    path: "/profile",
-    element: <CandidateProfile/>,
-  },
-  {
-    path: "/recruiter",
-    element: <RecruiterDashboard/>,
-  },
-  {
-    path: "/createjob",
-    element: <CreateJob/>,
-  },
-  {
-    path: "/managejob",
-    element: <ManageJobs/>,
-  },
-  {
-    path: "/applicants",
-    element: <Applicants/>,
-  },
-  {
-    path: "/editjob",
-    element: <EditJob/>,
-  },
-  {
-    path: "/recruiterprofile",
-    element: <RecruiterProfile/>,
-  },
-  {
-    path: "/notfound",
+    path: "*",
     element: <NotFound />,
   },
 ]);

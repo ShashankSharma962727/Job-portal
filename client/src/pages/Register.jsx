@@ -1,8 +1,9 @@
-
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import api from "../api";
 
 const Register = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstname: "",
     lastname: "",
@@ -17,19 +18,32 @@ const Register = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match");
-      return;
-    }
+  if (formData.password !== formData.confirmPassword) {
+    alert("Passwords do not match");
+    return;
+  }
 
-    const { confirmPassword, ...userData } = formData;
-    console.log(userData);
+  const { confirmPassword, ...userData } = formData;
 
-    // TODO: Connect register API here
-  };
+  try {
+    const response = await api.post(
+      "/auth/register",
+      userData
+    );
+
+    console.log("Register successful:", response.data);
+    alert("Registration successful!");
+
+    navigate("/login");
+
+  } catch (error) {
+    console.log(error.response?.data || error.message);
+    alert(error.response?.data?.message || "Registration failed");
+  }
+};
 
   return (
     <main className="flex min-h-screen w-full items-center justify-center bg-slate-50 px-4 py-10">

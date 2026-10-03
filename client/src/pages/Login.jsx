@@ -1,17 +1,40 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import api from "../api";
+import { useAuth } from "../Context/AuthContext";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
+  const {login} = useAuth();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Login API baad mein connect karenge
     console.log({ email, password });
+
+    try {
+      const response = await api.post("/auth/login", { email, password });
+      console.log("Login successful:", response.data);
+      const token = response?.data?.accessToken;
+
+      const profileResponse = await api.get("/auth/profile", {
+        headers: {
+          Authorization : `Bearer ${token}`
+        }
+      });
+
+      console.log("Login Successfull!", profileResponse.data, response.data);
+      login(profileResponse?.data, token);
+
+      alert("Login Successfull!");
+      navigate("/");
+    } catch (error) {
+      console.log(error.response?.data || error.message);
+    }
   };
 
   return (

@@ -1,5 +1,4 @@
-
-import React from "react";
+import React, { useState } from "react";
 import {
   BsBriefcase,
   BsGeoAlt,
@@ -7,6 +6,8 @@ import {
   BsClock,
   BsPlusCircle,
 } from "react-icons/bs";
+import api from "../../../api";
+import { useAuth } from "../../../Context/AuthContext";
 
 const inputClass =
   "w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100";
@@ -14,12 +15,48 @@ const inputClass =
 const labelClass = "mb-2 block text-sm font-semibold text-slate-700";
 
 const JobForm = () => {
+  const { token } = useAuth();
+  const [jobData, setJobData] = useState({
+    title: "",
+    company: "",
+    location: "",
+    jobtype: "",
+    salary: "",
+    experience: "",
+    skills: "",
+    description: "",
+    responsibilities: "",
+    requirements: "",
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    setJobData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await api.post("/jobs", jobData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log("Job listed", response.data);
+    } catch (error) {
+      console.log(error.response?.data || error.message);
+    }
+  };
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
       <div className="mb-7 border-b border-slate-100 pb-5">
-        <h2 className="text-xl font-bold text-slate-900">
-          Job Information
-        </h2>
+        <h2 className="text-xl font-bold text-slate-900">Job Information</h2>
         <p className="mt-1 text-sm text-slate-500">
           Enter the details of the job you want to post.
         </p>
@@ -33,8 +70,11 @@ const JobForm = () => {
             <BsBriefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
+              value={jobData.title}
+              name="title"
               placeholder="e.g. Frontend Developer"
               className={`${inputClass} pl-11`}
+              onChange={handleChange}
             />
           </div>
         </div>
@@ -44,8 +84,11 @@ const JobForm = () => {
           <label className={labelClass}>Company Name *</label>
           <input
             type="text"
+            name="company"
+            value={jobData.company}
             placeholder="Enter company name"
             className={inputClass}
+            onChange={handleChange}
           />
         </div>
 
@@ -57,8 +100,11 @@ const JobForm = () => {
               <BsGeoAlt className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
+                name="location"
+                value={jobData.location}
                 placeholder="e.g. Bangalore"
                 className={`${inputClass} pl-11`}
+                onChange={handleChange}
               />
             </div>
           </div>
@@ -67,7 +113,12 @@ const JobForm = () => {
             <label className={labelClass}>Job Type *</label>
             <div className="relative">
               <BsClock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-              <select className={`${inputClass} appearance-none pl-11`}>
+              <select
+                className={`${inputClass} appearance-none pl-11`}
+                name="jobtype"
+                value={jobData.jobtype}
+                onChange={handleChange}
+              >
                 <option value="">Select job type</option>
                 <option>Full-time</option>
                 <option>Part-time</option>
@@ -87,23 +138,25 @@ const JobForm = () => {
               <BsCurrencyRupee className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
+                value={jobData.salary}
+                name="salary"
                 placeholder="e.g. 5-8 LPA"
                 className={`${inputClass} pl-11`}
+                onChange={handleChange}
               />
             </div>
           </div>
 
           <div>
             <label className={labelClass}>Experience Required</label>
-            <select className={inputClass} defaultValue="">
-              <option value="">Select experience</option>
-              <option>Fresher</option>
-              <option>0-1 years</option>
-              <option>1-2 years</option>
-              <option>2-3 years</option>
-              <option>3-5 years</option>
-              <option>5+ years</option>
-            </select>
+            <input
+              type="text"
+              name="experience"
+              value={jobData.experience}
+              onChange={handleChange}
+              placeholder="e.g. 1-2"
+              className={`${inputClass} pl-11`}
+            />
           </div>
         </div>
 
@@ -112,8 +165,11 @@ const JobForm = () => {
           <label className={labelClass}>Required Skills *</label>
           <input
             type="text"
+            name="skills"
+            value={jobData.skills}
             placeholder="e.g. React, JavaScript, Node.js"
             className={inputClass}
+            onChange={handleChange}
           />
           <p className="mt-2 text-xs text-slate-400">
             Separate skills with commas.
@@ -124,9 +180,12 @@ const JobForm = () => {
         <div>
           <label className={labelClass}>Job Description *</label>
           <textarea
+            name="description"
+            value={jobData.description}
             rows={5}
             placeholder="Describe the role and what the candidate will do..."
             className={`${inputClass} resize-y`}
+            onChange={handleChange}
           />
         </div>
 
@@ -134,9 +193,14 @@ const JobForm = () => {
         <div>
           <label className={labelClass}>Responsibilities</label>
           <textarea
+            value={jobData.responsibilities}
+            name="responsibilities"
             rows={4}
-            placeholder={"List the main responsibilities...\nExample: Build responsive web applications"}
+            placeholder={
+              "List the main responsibilities...\nExample: Build responsive web applications"
+            }
             className={`${inputClass} resize-y`}
+            onChange={handleChange}
           />
         </div>
 
@@ -144,9 +208,14 @@ const JobForm = () => {
         <div>
           <label className={labelClass}>Requirements</label>
           <textarea
+            value={jobData.requirements}
+            name="requirements"
             rows={4}
-            placeholder={"List the job requirements...\nExample: Knowledge of React and JavaScript"}
+            placeholder={
+              "List the job requirements...\nExample: Knowledge of React and JavaScript"
+            }
             className={`${inputClass} resize-y`}
+            onChange={handleChange}
           />
         </div>
 
@@ -160,6 +229,7 @@ const JobForm = () => {
           </button>
 
           <button
+            onClick={handleSubmit}
             type="button"
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
           >

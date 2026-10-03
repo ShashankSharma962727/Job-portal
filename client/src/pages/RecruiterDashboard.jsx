@@ -25,7 +25,7 @@ const RecruiterDashboard = () => {
           </div>
 
           <Link
-            to="/recruiter/jobs/create"
+            to="/recruiter/createjob"
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
           >
             <BsPlusLg /> Post a Job

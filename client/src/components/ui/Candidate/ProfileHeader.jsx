@@ -1,8 +1,7 @@
 
-import React from "react";
 import { BsCameraFill, BsPersonFill } from "react-icons/bs";
 
-const ProfileHeader = () => {
+const ProfileHeader = ({user}) => {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
@@ -22,10 +21,10 @@ const ProfileHeader = () => {
             Candidate Profile
           </p>
           <h1 className="mt-1 text-2xl font-bold text-slate-900">
-            John Doe
+            {user.firstname} {user.lastname}
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            john.doe@example.com
+            {user.email}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">

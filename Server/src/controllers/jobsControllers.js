@@ -33,25 +33,29 @@ const createJob = async (req, res) => {
   try {
     const {
       title,
-      description,
       company,
       location,
+      jobtype,
       salary,
-      jobType,
-      skills,
       experience,
+      skills,
+      description,
+      responsibilities,
+      requirements
     } = req.body;
 
     if (
       !title ||
-      !description ||
       !company ||
       !location ||
+      !jobtype ||
       salary == null ||
-      !jobType ||
+      experience == null||
       !skills ||
-      experience == null
-    ) {
+      !description ||
+      !responsibilities ||
+      !requirements
+    ){
       return res
         .status(400)
         .json({ success: "False", message: "All fields are required!" });
@@ -61,19 +65,22 @@ const createJob = async (req, res) => {
 
     const job = await jobModel.create({
       title,
-      description,
       company,
       location,
+      jobtype,
       salary,
-      jobType,
-      skills,
       experience,
+      skills,
+      description,
+      responsibilities,
+      requirements,
       createdBy: user.userid,
     });
 
     return res.status(201).json({
       success: "True",
       message: "Job Listed!",
+      job
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });
