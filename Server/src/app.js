@@ -8,7 +8,7 @@ require("dotenv").config();
 
 const app = express();
 
-const frontendOrigin = "https://job-portal-69bh.onrender.com";
+const frontendOrigin = process.env.FRONTEND_URL || "https://job-portal-69bh.onrender.com/";
 
 // Middleware
 app.use(
