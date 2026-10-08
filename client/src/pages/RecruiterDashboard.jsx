@@ -1,65 +1,103 @@
-import React from "react";
 import { Link } from "react-router-dom";
-import { BsPlusLg, BsArrowRight } from "react-icons/bs";
-
-import RecruiterStats from "../components/ui/Recruiter/RecruiterSats";
-import RecentJobs from "../components/ui/Recruiter/RecentJobs";
-import RecentApplicants from "../components/ui/Recruiter/RecentApplications";
+import DashboardStats from "../components/ui/Recruiter/DashboardStats";
+import { useEffect, useState } from "react";
+import api from "../api";
 
 const RecruiterDashboard = () => {
+  const [jobs, setJobs] = useState([]);
+
+  useEffect(() => {
+    const fetchMyJobs = async () => {
+      try {
+        const response = await api.get("/jobs/myjobs");
+
+        setJobs(response.data.jobs);
+      } catch (error) {
+        console.log(error.message)
+      }
+    }
+
+    fetchMyJobs();
+  },[])
+  
   return (
-    <div className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl space-y-7">
-        {/* Page heading */}
-        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-          <div>
-            <p className="text-sm font-medium text-blue-600">
-              Recruiter Dashboard
-            </p>
-            <h1 className="mt-1 text-2xl font-bold text-slate-900 sm:text-3xl">
-              Welcome back, Recruiter!
-            </h1>
-            <p className="mt-2 text-sm text-slate-500">
-              Here's what's happening with your job postings.
-            </p>
-          </div>
+    <div className="max-w-7xl mx-auto px-4 py-8">
 
-          <Link
-            to="/recruiter/createjob"
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
-          >
-            <BsPlusLg /> Post a Job
-          </Link>
-        </div>
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-slate-800">
+          Recruiter Dashboard
+        </h1>
 
-        {/* Statistics */}
-        <RecruiterStats />
+        <p className="mt-2 text-slate-500">
+          Manage your jobs and applications.
+        </p>
+      </div>
 
-        {/* Quick action banner */}
-        <div className="flex flex-col justify-between gap-4 rounded-2xl bg-gradient-to-r from-blue-700 to-indigo-600 p-6 text-white sm:flex-row sm:items-center">
-          <div>
-            <h2 className="text-xl font-bold">
-              Find the right talent for your team
-            </h2>
-            <p className="mt-2 max-w-xl text-sm text-blue-100">
-              Post a new job and connect with candidates who match your requirements.
-            </p>
-          </div>
+      {/* Stats */}
+      <DashboardStats jobs={jobs}/>
+
+      {/* Quick Actions */}
+      <div className="mt-8">
+        <h2 className="text-xl font-semibold text-slate-800 mb-4">
+          Quick Actions
+        </h2>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
           <Link
             to="/recruiter/jobs/create"
-            className="inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-xl bg-white px-4 py-3 text-sm font-semibold text-blue-700 transition hover:bg-blue-50 sm:self-auto"
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl p-5 transition"
           >
-            Create Job <BsArrowRight />
-          </Link>
-        </div>
+            <h3 className="text-lg font-semibold">
+              Create Job
+            </h3>
 
-        {/* Recent activity */}
-        <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-2">
-          <RecentJobs />
-          <RecentApplicants />
+            <p className="text-blue-100 text-sm mt-1">
+              Post a new job vacancy
+            </p>
+          </Link>
+
+          <Link
+            to="/recruiter/jobs"
+            className="bg-white hover:bg-slate-50 border rounded-xl p-5 transition"
+          >
+            <h3 className="text-lg font-semibold text-slate-800">
+              Manage Jobs
+            </h3>
+
+            <p className="text-slate-500 text-sm mt-1">
+              View and manage your jobs
+            </p>
+          </Link>
+
+          <Link
+            to="/recruiter/profile"
+            className="bg-white hover:bg-slate-50 border rounded-xl p-5 transition"
+          >
+            <h3 className="text-lg font-semibold text-slate-800">
+              My Profile
+            </h3>
+
+            <p className="text-slate-500 text-sm mt-1">
+              View your recruiter profile
+            </p>
+          </Link>
+
         </div>
       </div>
+
+      {/* Welcome */}
+      <div className="mt-8 bg-white rounded-xl border p-6">
+        <h2 className="text-xl font-semibold text-slate-800">
+          Welcome Recruiter
+        </h2>
+
+        <p className="mt-2 text-slate-500">
+          From here you can create jobs, manage jobs and view applicants.
+        </p>
+      </div>
+
     </div>
   );
 };

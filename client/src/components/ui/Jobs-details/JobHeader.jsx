@@ -8,7 +8,7 @@ import {
   BsSend,
 } from "react-icons/bs";
 
-const JobHeader = () => {
+const JobHeader = ({ job, onApply }) => {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
       <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
@@ -18,15 +18,15 @@ const JobHeader = () => {
 
         <div className="min-w-0 flex-1">
           <span className="inline-block rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-            Full Time
+            {job?.jobtype || "Job"}
           </span>
 
           <h1 className="mt-3 text-2xl font-bold text-slate-900 sm:text-3xl">
-            Frontend Developer
+            {job?.title}
           </h1>
 
           <p className="mt-1 text-base font-medium text-slate-600">
-            Google
+            {job?.company}
           </p>
         </div>
 
@@ -42,28 +42,29 @@ const JobHeader = () => {
       <div className="mt-7 grid grid-cols-1 gap-4 border-b border-slate-100 pb-6 text-sm text-slate-600 sm:grid-cols-2 lg:grid-cols-4">
         <div className="flex items-center gap-2">
           <BsGeoAlt className="shrink-0 text-lg text-blue-600" />
-          <span>Bangalore, India</span>
+          <span>{job?.location}</span>
         </div>
 
         <div className="flex items-center gap-2">
           <BsBriefcase className="shrink-0 text-lg text-blue-600" />
-          <span>0–2 years</span>
+          <span>{job?.experience} years</span>
         </div>
 
         <div className="flex items-center gap-2">
           <BsCurrencyRupee className="shrink-0 text-lg text-blue-600" />
-          <span>8–12 LPA</span>
+          <span>{job?.salary} LPA</span>
         </div>
 
         <div className="flex items-center gap-2">
           <BsClock className="shrink-0 text-lg text-blue-600" />
-          <span>Posted 2 days ago</span>
+          <span>{job?.createdAt ? `Posted ${new Date(job.createdAt).toLocaleDateString()}` : "Recently posted"}</span>
         </div>
       </div>
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
         <button
           type="button"
+          onClick={onApply}
           className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white shadow-sm transition hover:bg-blue-700"
         >
           <BsSend />

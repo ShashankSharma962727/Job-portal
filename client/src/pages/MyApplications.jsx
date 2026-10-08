@@ -1,70 +1,40 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BsBriefcase, BsSearch } from "react-icons/bs";
 import ApplicationCard from "../components/ui/Candidate/ApplicationCard";
+import api from "../api";
 
 const MyApplications = () => {
-  const [activeFilter, setActiveFilter] = useState("All");
+  const [activeFilter, setActiveFilter] = useState("all");
+  const [myApplications, setMyApplications] = useState([]);
 
+  useEffect(() => {
+    const getMyApplications = async () => {
+      try {
+        const res = await api.get("/application/my")
+
+      setMyApplications(res?.data?.application)
+      console.log(res?.data?.application)
+      } catch (error) {
+        console.log(error.message)
+      }
+    }
+
+    getMyApplications();
+  },[])
+ 
   const filters = [
-    "All",
-    "Pending",
-    "Shortlisted",
-    "Rejected",
-    "Hired",
-  ];
-
-  const applications = [
-    {
-      id: 1,
-      jobId: "1",
-      title: "Frontend Developer",
-      company: "Google",
-      location: "Bangalore",
-      jobType: "Full Time",
-      salary: "8-12 LPA",
-      appliedDate: "28 Sep 2026",
-      status: "Shortlisted",
-    },
-    {
-      id: 2,
-      jobId: "2",
-      title: "MERN Stack Developer",
-      company: "Tech Solutions",
-      location: "Noida",
-      jobType: "Full Time",
-      salary: "5-8 LPA",
-      appliedDate: "26 Sep 2026",
-      status: "Pending",
-    },
-    {
-      id: 3,
-      jobId: "3",
-      title: "React Developer Intern",
-      company: "Startup India",
-      location: "Remote",
-      jobType: "Internship",
-      salary: "15-20K/month",
-      appliedDate: "24 Sep 2026",
-      status: "Rejected",
-    },
-    {
-      id: 4,
-      jobId: "4",
-      title: "Backend Developer",
-      company: "Amazon",
-      location: "Hyderabad",
-      jobType: "Full Time",
-      salary: "6-10 LPA",
-      appliedDate: "22 Sep 2026",
-      status: "Hired",
-    },
+    "all",
+    "applied",
+    "shortlisted",
+    "rejected",
+    "hired",
   ];
 
   const filteredApplications =
-    activeFilter === "All"
-      ? applications
-      : applications.filter(
+    activeFilter === "all"
+      ? myApplications
+      : myApplications.filter(
           (application) => application.status === activeFilter
         );
 
@@ -95,7 +65,7 @@ const MyApplications = () => {
                 Total Applications
               </p>
               <h2 className="text-2xl font-bold text-slate-900">
-                {applications.length}
+                {myApplications.length}
               </h2>
             </div>
           </div>
@@ -124,7 +94,7 @@ const MyApplications = () => {
           {filteredApplications.length > 0 ? (
             filteredApplications.map((application) => (
               <ApplicationCard
-                key={application.id}
+                key={application._id}
                 application={application}
               />
             ))

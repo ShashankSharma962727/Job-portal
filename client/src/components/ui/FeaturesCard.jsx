@@ -1,7 +1,7 @@
 
 import { MapPin, IndianRupee, BriefcaseBusiness } from "lucide-react";
 
-const FeaturesCard = () => {
+const FeaturesCard = ({job}) => {
   return (
     <article className="group flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-100/60">
 
@@ -13,10 +13,10 @@ const FeaturesCard = () => {
 
         <div className="min-w-0">
           <h2 className="truncate text-lg font-bold text-slate-900">
-            Frontend Developer
+            {job.title}
           </h2>
           <p className="text-sm font-medium text-slate-500">
-            Google
+            {job.company}
           </p>
         </div>
       </div>
@@ -25,17 +25,17 @@ const FeaturesCard = () => {
       <div className="mb-5 flex flex-col gap-3">
         <p className="flex items-center gap-2 text-sm text-slate-600">
           <MapPin size={17} className="shrink-0 text-slate-400" />
-          Bangalore, India
+          {job.location}
         </p>
 
         <p className="flex items-center gap-2 text-sm font-semibold text-green-600">
           <IndianRupee size={17} />
-          8–12 LPA
+          {job.salary}
         </p>
 
         <div>
           <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-            Full Time
+            {job.jobtype}
           </span>
         </div>
       </div>

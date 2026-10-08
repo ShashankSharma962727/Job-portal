@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { BsSearch, BsBriefcase } from "react-icons/bs";
-import JobCard from "../components/ui/Jobcard";
+import Jobcard from "../components/ui/Jobcard";
 import api from "../api";
 
 
@@ -49,7 +49,7 @@ const Jobs = () => {
             </div>
             {
               jobs.map((job) => {
-                return <JobCard key={job._id} job={job} />
+                return <Jobcard key={job._id} job={job} />
               })
             }
           </section>

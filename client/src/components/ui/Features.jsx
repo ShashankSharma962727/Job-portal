@@ -1,7 +1,24 @@
 
+import { useEffect, useState } from "react";
 import FeaturesCard from "./FeaturesCard";
+import api from "../../api";
 
 const Features = () => {
+  const [jobs, setJobs] = useState([]);
+
+  useEffect(() => {
+    const getJobs = async () => {
+      try {
+        const response = await api.get("/jobs");
+        setJobs(response?.data?.jobs.splice(0,4));
+      } catch (error) {
+        console.log(error.message);
+      }
+    }
+
+    getJobs();
+  },[])
+
   return (
     <section className="w-full bg-slate-50 px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
       <div className="mx-auto flex max-w-7xl flex-col gap-8">
@@ -21,10 +38,11 @@ const Features = () => {
 
         {/* Job Cards */}
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          <FeaturesCard />
-          <FeaturesCard />
-          <FeaturesCard />
-          <FeaturesCard />
+          {
+            jobs.map((job) => {
+              return <FeaturesCard job={job} key={job._id} />
+            })
+          }
         </div>
 
       </div>

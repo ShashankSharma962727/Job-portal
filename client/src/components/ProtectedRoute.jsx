@@ -1,9 +1,18 @@
-import React from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
 
 const ProtectedRoute = ({ allowedRole }) => {
-  const {user} = useAuth();
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <div className="text-sm font-medium text-slate-600">
+          Checking your session...
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     return <Navigate to="/login" replace />;
@@ -13,7 +22,7 @@ const ProtectedRoute = ({ allowedRole }) => {
     return <Navigate to="/" replace />;
   }
 
-  return <Outlet/>;
+  return <Outlet />;
 };
 
 export default ProtectedRoute;

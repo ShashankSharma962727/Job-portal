@@ -1,18 +1,25 @@
-const express = require('express');
+const express = require("express");
 const cors = require("cors");
-const authRouter = require('./routes/authRouter');
-const cookieParser = require('cookie-parser');
-const jobRouter = require('./routes/jobRoutes');
-const applicationRouter = require('./routes/applicationRouter');
+const authRouter = require("./routes/authRouter");
+const cookieParser = require("cookie-parser");
+const jobRouter = require("./routes/jobRoutes");
+const applicationRouter = require("./routes/applicationRouter");
 require("dotenv").config();
 
 const app = express();
 
-// Middlewares
+const frontendOrigin = process.env.FRONTEND_URL || "http://localhost:5173";
+
+// Middleware
+app.use(
+  cors({
+    origin: frontendOrigin,
+    credentials: true,
+  }),
+);
 app.use(cookieParser());
-app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({extended: false}));
+app.use(express.urlencoded({ extended: false }));
 
 // Router.
 app.use("/auth", authRouter);

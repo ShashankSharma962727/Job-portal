@@ -1,10 +1,51 @@
-import JobHeader from "../components//ui/Jobs-details/JobHeader";
+import JobHeader from "../components/ui/Jobs-details/JobHeader";
 import JobDescription from "../components/ui/Jobs-details/JobDescription";
-import CompanyCard from "../components/ui/Jobs-details/CompanyCard";
 import JobOverview from "../components/ui/Jobs-details/JobOverview";
+
 import { BsShieldCheck, BsBriefcaseFill, BsSend } from "react-icons/bs";
+import { useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import api from "../api";
 
 const JobDetails = () => {
+  const [jobDetail, setJobDetail] = useState(null);
+
+  const { id } = useParams();
+  useEffect(() => {
+    const jobDetails = async () => {
+      try {
+        const res = await api.get(`/jobs/${id}`);
+        setJobDetail(res?.data?.job);
+      } catch (error) {
+        console.log(error.message);
+      }
+    };
+
+    jobDetails();
+  }, [id]);
+
+  const SubmitApplication = async () => {
+    try {
+      const res = await api.post(`application/apply/${id}`, {});
+
+      console.log(res.data);
+
+      alert(res.data.message || "Application submitted successfully");
+    } catch (error) {
+      console.log("Full error:", error);
+
+      const message =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        "Something went wrong";
+
+      console.log("Server message:", message);
+
+      alert(message);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
@@ -20,13 +61,12 @@ const JobDetails = () => {
         {/* Main layout */}
         <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
           <div className="flex flex-col gap-6 lg:col-span-2">
-            <JobHeader />
-            <JobDescription />
+            <JobHeader job={jobDetail} onApply={SubmitApplication} />
+            <JobDescription job={jobDetail} />
           </div>
 
           <aside className="flex flex-col gap-6 lg:col-span-1">
-            <CompanyCard />
-            <JobOverview />
+            <JobOverview job={jobDetail} />
 
             {/* Important notice */}
             <div className="rounded-2xl border border-blue-100 bg-blue-50 p-5">
@@ -34,6 +74,7 @@ const JobDetails = () => {
                 <BsShieldCheck size={20} />
                 Important
               </div>
+
               <p className="mt-3 text-sm leading-6 text-slate-600">
                 Review the job requirements before applying. Make sure your
                 profile is up to date.
@@ -48,10 +89,12 @@ const JobDetails = () => {
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-blue-50 text-2xl text-blue-600">
               <BsBriefcaseFill />
             </div>
+
             <div>
               <h2 className="text-lg font-bold text-slate-900">
                 Ready to take the next step?
               </h2>
+
               <p className="mt-1 text-sm text-slate-500">
                 Apply for this opportunity and take your career forward.
               </p>
@@ -60,6 +103,7 @@ const JobDetails = () => {
 
           <button
             type="button"
+            onClick={SubmitApplication}
             className="flex w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-blue-600 px-7 py-3 font-semibold text-white transition hover:bg-blue-700 sm:w-auto"
           >
             <BsSend />

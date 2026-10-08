@@ -1,7 +1,7 @@
 
 import { BsArrowUpRight } from "react-icons/bs";
 
-const CompanyCard = () => {
+const CompanyCard = ({job}) => {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <h2 className="text-lg font-bold text-slate-900">
@@ -14,17 +14,12 @@ const CompanyCard = () => {
         </div>
 
         <div>
-          <h3 className="font-semibold text-slate-900">Google</h3>
+          <h3 className="font-semibold text-slate-900">{job?.company}</h3>
           <p className="mt-1 text-sm text-slate-500">
-            Technology
+            {job?.company}
           </p>
         </div>
       </div>
-
-      <p className="mt-5 border-t border-slate-100 pt-5 text-sm leading-6 text-slate-600">
-        Google is a technology company focused on internet-related
-        services and products.
-      </p>
 
       <a
         href="#company"

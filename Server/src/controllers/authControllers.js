@@ -1,7 +1,57 @@
 const crypto = require("crypto");
-const userModel = require("../models/user");
+const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const userModel = require("../models/user");
 const sessionModel = require("../models/session.js");
+
+const ACCESS_TOKEN_MAX_AGE = 1000 * 60 * 15;
+const REFRESH_TOKEN_MAX_AGE = 1000 * 60 * 60 * 24 * 7;
+
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.COOKIE_SECURE === "true",
+  sameSite: process.env.COOKIE_SAME_SITE || "strict",
+  path: "/",
+};
+
+const setAuthCookies = (res, accessToken, refreshToken) => {
+  res.cookie("access-token", accessToken, {
+    ...cookieOptions,
+    maxAge: ACCESS_TOKEN_MAX_AGE,
+  });
+
+  res.cookie("refresh-token", refreshToken, {
+    ...cookieOptions,
+    maxAge: REFRESH_TOKEN_MAX_AGE,
+  });
+};
+
+const clearAuthCookies = (res) => {
+  res.clearCookie("access-token", cookieOptions);
+  res.clearCookie("refresh-token", cookieOptions);
+};
+
+const createAccessToken = (user, sessionId) =>
+  jwt.sign(
+    {
+      role: user.role,
+      userid: user._id,
+      sid: sessionId,
+    },
+    process.env.accessTokenSecretKey,
+    { expiresIn: "15m" },
+  );
+
+const createRefreshToken = (user, sessionId) =>
+  jwt.sign(
+    {
+      role: user.role,
+      userid: user._id,
+      sid: sessionId,
+    },
+    process.env.refreshTokenSecretKey,
+    { expiresIn: "7d" },
+  );
 
 // User register controller
 const registerUser = async (req, res) => {
@@ -9,9 +59,13 @@ const registerUser = async (req, res) => {
     const { firstname, lastname, email, password, role } = req.body;
 
     if (!firstname || !email || !password || !role) {
-      return res
-        .status(400)
-        .json({ message: "All fields are required!" });
+      return res.status(400).json({ message: "All fields are required!" });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        message: "Password must be at least 6 characters long.",
+      });
     }
 
     const allowedRole = ["candidate", "recruiter"];
@@ -20,7 +74,8 @@ const registerUser = async (req, res) => {
       return res.status(400).json({ message: "Invalid Role" });
     }
 
-    const existingUser = await userModel.findOne({ email });
+    const normalizedEmail = email.trim().toLowerCase();
+    const existingUser = await userModel.findOne({ email: normalizedEmail });
 
     if (existingUser) {
       return res
@@ -28,20 +83,21 @@ const registerUser = async (req, res) => {
         .json({ message: "User already registered, please login." });
     }
 
-    const hashedPassword = crypto.createHash("sha256").update(password).digest("hex");
+    const hashedPassword = await bcrypt.hash(password, 12);
 
     const user = await userModel.create({
-      firstname: firstname,
-      lastname: lastname,
-      email: email,
+      firstname: firstname.trim(),
+      lastname: lastname?.trim(),
+      email: normalizedEmail,
       password: hashedPassword,
-      role: role,
+      role,
     });
 
     return res
       .status(201)
-      .json({ message: "User registered successfull!", userid: user._id });
+      .json({ message: "User registered successfully!", userid: user._id });
   } catch (error) {
+    console.error("Register error:", error);
     return res.status(500).json({ message: "Server Error" });
   }
 };
@@ -55,61 +111,65 @@ const loginUser = async (req, res) => {
       return res.status(400).json({ message: "All fields are required!" });
     }
 
-    const user = await userModel.findOne({ email });
+    const user = await userModel.findOne({
+      email: email.trim().toLowerCase(),
+    });
 
     if (!user) {
-      return res.status(404).json({ message: "Invalid email or password!" });
-    }
-    
-    const hashedPassword = crypto.createHash("sha256").update(password).digest("hex");
-
-    if(hashedPassword !== user.password){
-      return res.status(404).json({ message: "Invalid email or password!" });
+      return res.status(401).json({ message: "Invalid email or password!" });
     }
 
-    const refreshToken = jwt.sign(
-      {
-        role: user.role,
-        userid: user._id,
-      },
-      process.env.refreshTokenSecretKey,
-      {
-        expiresIn: "7d",
-      },
-    );
+    let passwordValid = false;
 
-    const refreshTokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex");
+    // Existing accounts used SHA-256. Verify them once and transparently
+    // migrate the password to bcrypt without changing the login flow.
+    if (user.password.startsWith("$2")) {
+      passwordValid = await bcrypt.compare(password, user.password);
+    } else {
+      const legacyHash = crypto
+        .createHash("sha256")
+        .update(password)
+        .digest("hex");
+
+      passwordValid = legacyHash === user.password;
+
+      if (passwordValid) {
+        user.password = await bcrypt.hash(password, 12);
+        await user.save();
+      }
+    }
+
+    if (!passwordValid) {
+      return res.status(401).json({ message: "Invalid email or password!" });
+    }
 
     const session = await sessionModel.create({
       userid: user._id,
-      refreshTokenHash,
+      refreshTokenHash: "pending",
       ip: req.ip,
-      userAgent: req.headers["user-agent"],
+      userAgent: req.headers["user-agent"] || "unknown",
+      expiresAt: new Date(Date.now() + REFRESH_TOKEN_MAX_AGE),
     });
 
-    res.cookie("refresh-token", refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "strict",
-      maxAge: 1000 * 60 * 60 * 24 * 7,
-    });
+    const sessionId = session._id.toString();
+    const refreshToken = createRefreshToken(user, sessionId);
+    const refreshTokenHash = crypto
+      .createHash("sha256")
+      .update(refreshToken)
+      .digest("hex");
 
-    const accessToken = jwt.sign(
-      {
-        role: user.role,
-        userid: user._id,
-      },
-      process.env.accessTokenSecretKey,
-      {
-        expiresIn: "15m",
-      },
-    );
+    session.refreshTokenHash = refreshTokenHash;
+    await session.save();
+
+    const accessToken = createAccessToken(user, sessionId);
+
+    setAuthCookies(res, accessToken, refreshToken);
 
     return res.status(200).json({
-      message: "Login successfull",
-      accessToken,
+      message: "Login successful",
     });
   } catch (error) {
+    console.error("Login error:", error);
     return res.status(500).json({ message: "Server Error" });
   }
 };
@@ -119,130 +179,151 @@ const generateNewToken = async (req, res) => {
     const refreshToken = req.cookies["refresh-token"];
 
     if (!refreshToken) {
-      return res.status(404).json({ message: "Refresh token required!" });
+      clearAuthCookies(res);
+      return res.status(401).json({ message: "Refresh token required!" });
     }
 
-    const decodeRefreshToken = jwt.verify(
+    const decodedRefreshToken = jwt.verify(
       refreshToken,
       process.env.refreshTokenSecretKey,
     );
 
-    if (!decodeRefreshToken) {
-      return res.status(404).json({ message: "Refresh token required!" });
+    if (!decodedRefreshToken?.sid || !decodedRefreshToken?.userid) {
+      clearAuthCookies(res);
+      return res.status(401).json({ message: "Invalid refresh token!" });
     }
 
-    const user = await userModel.findById(decodeRefreshToken.userid);
-
-    if(!user){
-      return res.status(404).json({
-        message: "User not found!"
-      })
-    }
-    
-    const refreshTokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex");
+    const refreshTokenHash = crypto
+      .createHash("sha256")
+      .update(refreshToken)
+      .digest("hex");
 
     const session = await sessionModel.findOne({
+      _id: decodedRefreshToken.sid,
+      userid: decodedRefreshToken.userid,
       refreshTokenHash,
-      revoke: false
-    })
+      revoke: false,
+      expiresAt: { $gt: new Date() },
+    });
 
-    if(!session){
-      return res.status(404).json({
-        message: "Invalid refresh token!"
-      })
+    if (!session) {
+      clearAuthCookies(res);
+      return res.status(401).json({ message: "Invalid session!" });
     }
 
-    const newAccessToken = jwt.sign(
-      {
-        role: user.role,
-        userid: user._id,
-      },
-      process.env.accessTokenSecretKey,
-      {
-        expiresIn: "15m",
-      },
-    );
+    const user = await userModel.findById(decodedRefreshToken.userid);
 
-    const newRefreshToken = jwt.sign(
-      {
-        role: user.role,
-        userid: user._id,
-      },
-      process.env.refreshTokenSecretKey,
-      {
-        expiresIn: "7d",
-      },
-    );
+    if (!user) {
+      session.revoke = true;
+      await session.save();
+      clearAuthCookies(res);
+      return res.status(401).json({ message: "User not found!" });
+    }
 
-    const newRefreshTokenHash = crypto.createHash("sha256").update(newRefreshToken).digest("hex");
+    const sessionId = session._id.toString();
+    const newAccessToken = createAccessToken(user, sessionId);
+    const newRefreshToken = createRefreshToken(user, sessionId);
 
-    session.refreshTokenHash = newRefreshTokenHash;
+    session.refreshTokenHash = crypto
+      .createHash("sha256")
+      .update(newRefreshToken)
+      .digest("hex");
+    session.expiresAt = new Date(Date.now() + REFRESH_TOKEN_MAX_AGE);
     await session.save();
 
-    res.cookie("refresh-token", newRefreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "strict",
-      maxAge: 1000 * 60 * 60 * 24 * 7,
-    });
+    setAuthCookies(res, newAccessToken, newRefreshToken);
 
     return res.status(200).json({
       message: "New access token generated",
-      newAccessToken,
     });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    clearAuthCookies(res);
+
+    if (
+      error.name === "TokenExpiredError" ||
+      error.name === "JsonWebTokenError"
+    ) {
+      return res.status(401).json({ message: "Invalid or expired session!" });
+    }
+
+    console.error("Refresh token error:", error);
+    return res.status(500).json({ message: "Server Error" });
   }
 };
 
 const profile = async (req, res) => {
   try {
-    const userid = req.user.userid;
-    const userdata = await userModel.findById(userid).select("-password");
+    const userdata = await userModel
+      .findById(req.user.userid)
+      .select("-password");
+
+    if (!userdata) {
+      return res.status(404).json({ message: "User not found!" });
+    }
 
     return res.status(200).json(userdata);
   } catch (error) {
+    console.error("Profile error:", error);
     return res.status(500).json({ message: "Server Error" });
   }
 };
 
-const logout = async (req,res) => {
+const logout = async (req, res) => {
   try {
     const refreshToken = req.cookies["refresh-token"];
 
-    if(!refreshToken){
-      return res.status(404).json({
-        message: "Refresh Token not found!"
-      })
+    if (!refreshToken) {
+      clearAuthCookies(res);
+      return res.status(200).json({ message: "Logout successful!" });
     }
 
-    const decodeRefreshToken = jwt.verify(refreshToken, process.env.refreshTokenSecretKey);
+    let decodedRefreshToken;
 
-    const session = await sessionModel.findOneAndUpdate({
-      userid: decodeRefreshToken.userid,
-      revoke: false
-    },{
-      revoke: true
-    });
-
-    if(!session){
-      return res.status(404).json({
-        message: "Invalid session!"
-      })
+    try {
+      decodedRefreshToken = jwt.verify(
+        refreshToken,
+        process.env.refreshTokenSecretKey,
+      );
+    } catch (error) {
+      clearAuthCookies(res);
+      return res.status(200).json({ message: "Logout successful!" });
     }
 
-    res.clearCookie("refresh-token", {
-      httpOnly: true,
-      secure: true,
-      sameSite: "strict",
-    });
+    const refreshTokenHash = crypto
+      .createHash("sha256")
+      .update(refreshToken)
+      .digest("hex");
+
+    // Revoke only the exact session represented by the current refresh token.
+    await sessionModel.findOneAndUpdate(
+      {
+        _id: decodedRefreshToken.sid,
+        userid: decodedRefreshToken.userid,
+        refreshTokenHash,
+      },
+      {
+        $set: {
+          revoke: true,
+        },
+      },
+    );
+
+    clearAuthCookies(res);
 
     return res.status(200).json({
-      message: "Logout successfully!"
+      message: "Logout successful!",
     });
-
   } catch (error) {
+    console.error("Logout error:", error);
+    clearAuthCookies(res);
     return res.status(500).json({ message: "Server Error" });
   }
-}
-module.exports = { registerUser, loginUser, profile, generateNewToken, logout};
+};
+
+module.exports = {
+  registerUser,
+  loginUser,
+  profile,
+  generateNewToken,
+  logout,
+};

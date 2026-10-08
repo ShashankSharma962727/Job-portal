@@ -7,7 +7,7 @@ import {
   BsBookmark,
 } from "react-icons/bs";
 
-const JobCard = ({ job }) => {
+const Jobcard = ({ job }) => {
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-5 transition-all hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg">
       <div className="flex items-start justify-between gap-3">
@@ -37,7 +37,7 @@ const JobCard = ({ job }) => {
 
       <div className="mt-5 flex flex-wrap gap-2">
         <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
-          {job.jobType}
+          {job.jobtype}
         </span>
         <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
           {job.experience}
@@ -62,7 +62,7 @@ const JobCard = ({ job }) => {
 
       <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
         <span className="text-xs text-slate-400">
-          {job.postedAt}
+          {job.createdAt ? new Date(job.createdAt).toLocaleDateString() : "Recently posted"}
         </span>
 
         <Link
@@ -76,4 +76,4 @@ const JobCard = ({ job }) => {
   );
 };
 
-export default JobCard;
+export default Jobcard;

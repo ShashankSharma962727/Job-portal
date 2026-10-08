@@ -9,17 +9,17 @@ import {
   BsGlobe,
 } from "react-icons/bs";
 
-const overviewItems = [
-  { label: "Job Type", value: "Full Time", icon: BsBriefcase },
-  { label: "Department", value: "Engineering", icon: BsBuilding },
-  { label: "Experience", value: "0–2 years", icon: BsBarChart },
-  { label: "Education", value: "Bachelor's Degree", icon: BsMortarboard },
-  { label: "Salary", value: "₹8–12 LPA", icon: BsCurrencyRupee },
-  { label: "Location", value: "Bangalore, India", icon: BsGeoAlt },
-  { label: "Work Model", value: "On-site", icon: BsGlobe },
-];
 
-const JobOverview = () => {
+const JobOverview = ({job}) => {
+  const overviewItems = [
+  { label: "Job Type", value: job?.jobtype, icon: BsBriefcase },
+  { label: "Department", value: "Engineering", icon: BsBuilding },
+  { label: "Experience", value: `${job?.experience} years`, icon: BsBarChart },
+  { label: "Education", value: "Bachelor's Degree", icon: BsMortarboard },
+  { label: "Salary", value: `${job?.salary} LPA`, icon: BsCurrencyRupee },
+  { label: "Location", value: job?.location, icon: BsGeoAlt },
+  { label: "Work Model", value: job?.jobtype, icon: BsGlobe },
+];
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <h2 className="mb-5 text-lg font-bold text-slate-900">

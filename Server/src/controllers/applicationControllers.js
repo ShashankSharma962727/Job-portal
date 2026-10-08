@@ -116,6 +116,38 @@ const getapplicants = async (req, res) => {
   }
 };
 
+
+// Get one application - recruiter can view applications for their jobs.
+const getApplicationById = async (req, res) => {
+  try {
+    const application = await applicationModel
+      .findById(req.params.id)
+      .populate("applicant", "firstname lastname email profile")
+      .populate("job");
+
+    if (!application) {
+      return res.status(404).json({ message: "Application not found!" });
+    }
+
+    if (
+      !application.job ||
+      application.job.createdBy.toString() !== req.user.userid.toString()
+    ) {
+      return res.status(403).json({
+        message: "You cannot view this application",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Application fetched successfully!",
+      application,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
 // Update application status - recruiter only
 const applicationStatusUpdate = async (req, res) => {
   try {
@@ -175,5 +207,6 @@ module.exports = {
   applyForJobs,
   getapplication,
   getapplicants,
+  getApplicationById,
   applicationStatusUpdate,
 };

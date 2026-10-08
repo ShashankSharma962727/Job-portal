@@ -1,4 +1,3 @@
-const { maxLength } = require("cookieparser");
 const mongoose = require("mongoose");
 
 const applicationSchema = new mongoose.Schema(
@@ -16,11 +15,13 @@ const applicationSchema = new mongoose.Schema(
     resume: {
       type: String,
       trim: true,
+      default: "Resume",
     },
-    coverletter: {
+    coverLetter: {
       type: String,
-      maxLength: 2000,
+      maxlength: 2000,
       trim: true,
+      default: "Cover Letter",
     },
     status: {
       type: String,
@@ -34,8 +35,8 @@ const applicationSchema = new mongoose.Schema(
 );
 
 applicationSchema.index(
-  { job: 1, candidate: 1 },
-  { unique: true }
+  { job: 1, applicant: 1 },
+  { unique: true },
 );
 
 const applicationModel = mongoose.model("applications", applicationSchema);
